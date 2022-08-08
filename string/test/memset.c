@@ -1,7 +1,7 @@
 #include "string.h"
 
 int
-main(int argc, char **argv)
+main(void)
 {
 	int a[5] = {1, 2, 3, 4, 5};
 	memset((void *)a, 0xff, 4);
