@@ -281,18 +281,18 @@
 .set SYS_io_uring_setup, 425
 .set SYS_io_uring_enter, 426
 .set SYS_io_uring_register, 427
-.set SYS_open_tree	, 428
-.set SYS_move_mount	, 429
-.set SYS_fsopen	, 430
-.set SYS_fsconfig	, 431
-.set SYS_fsmount	, 432
-.set SYS_fspick	, 433
-.set SYS_pidfd_open	, 434
-.set SYS_clone3	, 435
+.set SYS_open_tree, 428
+.set SYS_move_mount, 429
+.set SYS_fsopen, 430
+.set SYS_fsconfig, 431
+.set SYS_fsmount, 432
+.set SYS_fspick, 433
+.set SYS_pidfd_open, 434
+.set SYS_clone3, 435
 .set SYS_close_range, 436
-.set SYS_openat2	, 437
+.set SYS_openat2, 437
 .set SYS_pidfd_getfd, 438
-.set SYS_faccessat2	, 439
+.set SYS_faccessat2, 439
 .set SYS_process_madvise, 440
 .set SYS_epoll_pwait2, 441
 .set SYS_mount_setattr, 442
