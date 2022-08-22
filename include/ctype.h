@@ -3,6 +3,7 @@
 
 int		 isascii(int);
 int		 isdigit(int);
+int		 islower(int);
 
 
 #endif
