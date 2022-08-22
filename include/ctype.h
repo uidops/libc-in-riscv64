@@ -4,6 +4,7 @@
 int		 isascii(int);
 int		 isdigit(int);
 int		 islower(int);
+int		 isupper(int);
 
 
 #endif
