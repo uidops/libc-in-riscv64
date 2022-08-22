@@ -5,6 +5,7 @@ int		 isascii(int);
 int		 isdigit(int);
 int		 islower(int);
 int		 isupper(int);
+int		 isalpha(int);
 
 
 #endif
