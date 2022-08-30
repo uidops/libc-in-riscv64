@@ -7,6 +7,7 @@ int		 islower(int);
 int		 isupper(int);
 int		 isalpha(int);
 int		 isalnum(int);
+int		 toascii(int);
 
 
 #endif
