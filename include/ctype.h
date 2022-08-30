@@ -8,6 +8,7 @@ int		 isupper(int);
 int		 isalpha(int);
 int		 isalnum(int);
 int		 toascii(int);
+int		 toupper(int);
 
 
 #endif
