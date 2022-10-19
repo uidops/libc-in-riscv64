@@ -3,5 +3,6 @@
 
 int		 abs(int);
 long		 labs(long);
+int		 atoi(const char *);
 
 #endif
