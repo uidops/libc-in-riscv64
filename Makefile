@@ -1,7 +1,7 @@
 # Build and test the libc the way the README does:
 #
-#   make               build every test binary as <name>_test
-#   make test          build + run all of them under spike/pk
+#   make               build every test binary into build/
+#   make test          build + run them all under spike/pk
 #   make strlen_test   build a single test
 #   make clean
 #
@@ -11,9 +11,11 @@ CC     = riscv64-unknown-elf-gcc
 CFLAGS = -fno-builtin -Iinclude
 PK     = /opt/homebrew/opt/riscv-pk/riscv64-unknown-elf/bin/pk
 SPIKE  = spike
+BUILD  = build
 
-# <dir>/test/<name>.c  ->  <name>_test, built from <dir>/<name>.s
-TESTS := $(addsuffix _test,$(basename $(notdir $(wildcard ctype/test/*.c string/test/*.c stdlib/test/*.c))))
+# <dir>/test/<name>.c  ->  build/<name>_test, built from <dir>/<name>.s
+NAMES := $(addsuffix _test,$(basename $(notdir $(wildcard ctype/test/*.c string/test/*.c stdlib/test/*.c))))
+TESTS := $(addprefix $(BUILD)/,$(NAMES))
 
 # broken before this Makefile existed: memset guards on 'ptr & len',
 # strcat scans past the NUL, strncmp test expects a wrong result
@@ -24,18 +26,25 @@ vpath %.c ctype/test string/test stdlib/test
 
 all: $(TESTS)
 
-%_test: %.s %.c
+$(BUILD):
+	mkdir -p $@
+
+$(BUILD)/%_test: %.s %.c | $(BUILD)
 	$(CC) $(CFLAGS) $^ -o $@
+
+# "make <name>_test" builds build/<name>_test
+$(NAMES): %_test: $(BUILD)/%_test
+	@:
 
 # rand() and srand() share the seed living in rand.s, so both objects
 # always link together
-rand_test srand_test: rand.s srand.s
+$(BUILD)/rand_test $(BUILD)/srand_test: rand.s srand.s
 
 test: all
 	@pass=0; fail=0; xfail=0; \
-	for t in $(TESTS); do \
+	for t in $(NAMES); do \
 		exp=0; [ $$t = abort_test ] && exp=134; \
-		$(SPIKE) $(PK) ./$$t >/dev/null 2>&1; st=$$?; \
+		$(SPIKE) $(PK) $(BUILD)/$$t >/dev/null 2>&1; st=$$?; \
 		if [ $$st -eq $$exp ]; then \
 			pass=$$((pass + 1)); \
 			case " $(XFAIL) " in \
@@ -53,6 +62,6 @@ test: all
 	[ $$fail -eq 0 ]
 
 clean:
-	rm -f *_test */*_test */test/*_test
+	rm -rf $(BUILD) *_test */*_test */test/*_test
 
 .PHONY: all test clean
