@@ -7,12 +7,14 @@ size_t		 strlen(const char *);
 size_t		 strnlen(const char *, size_t);
 char		*strcpy(char *, const char *);
 char		*strncpy(char *, const char *, size_t);
+size_t		 strxfrm(char *, const char *, size_t);
 char		*strcat(char *, const char *);
 char		*strncat(char *, const char *, size_t);
 char		*strchr(const char *, int);
 char		*strrchr(const char *, int);
 int		 strcmp(const char *, const char *);
 int		 strncmp(const char *, const char *, size_t);
+int		 strcoll(const char *, const char *);
 char		*strstr(const char *, const char *);
 
 void		*memset(void *, int, size_t);
