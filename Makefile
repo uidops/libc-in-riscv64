@@ -1,64 +1,68 @@
-# Build and test the libc the way the README does:
+# Build the whole libc into build/libc.a once, then link each test
+# against it — same flags as the README (riscv64-unknown-elf-gcc
+# -fno-builtin -Iinclude), run under spike/pk:
 #
-#   make               build every test binary into build/
-#   make test          build + run them all under spike/pk
+#   make               build build/libc.a + all test binaries
+#   make test          build + run them all
 #   make strlen_test   build a single test
 #   make clean
 #
 # A test passes when its exit status is 0 (134 for abort_test).
+#
+# Static archive, not a .so: this toolchain's linker has no -shared
+# support and pk cannot run dynamic executables.
 
 CC     = riscv64-unknown-elf-gcc
+AR     = riscv64-unknown-elf-ar
 CFLAGS = -fno-builtin -Iinclude
 PK     = /opt/homebrew/opt/riscv-pk/riscv64-unknown-elf/bin/pk
 SPIKE  = spike
 BUILD  = build
+LIB    = $(BUILD)/libc.a
 
-# <dir>/test/<name>.c  ->  build/<name>_test, built from <dir>/<name>.s
+# every <dir>/<name>.s becomes one object in the archive
+SRCS := $(wildcard ctype/*.s string/*.s stdlib/*.s)
+OBJS := $(addprefix $(BUILD)/,$(addsuffix .o,$(basename $(notdir $(SRCS)))))
+
+# <dir>/test/<name>.c  ->  build/<name>_test, linked against $(LIB)
 NAMES := $(addsuffix _test,$(basename $(notdir $(wildcard ctype/test/*.c string/test/*.c stdlib/test/*.c))))
 TESTS := $(addprefix $(BUILD)/,$(NAMES))
-
-# broken before this Makefile existed: memset guards on 'ptr & len',
-# strcat scans past the NUL, strncmp test expects a wrong result
-XFAIL := memset_test strcat_test strncmp_test
 
 vpath %.s ctype string stdlib
 vpath %.c ctype/test string/test stdlib/test
 
-all: $(TESTS)
+all: $(LIB) $(TESTS)
 
 $(BUILD):
 	mkdir -p $@
 
-$(BUILD)/%_test: %.s %.c | $(BUILD)
-	$(CC) $(CFLAGS) $^ -o $@
+$(BUILD)/%.o: %.s | $(BUILD)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# rm first so members of deleted sources do not linger in the archive
+$(LIB): $(OBJS) | $(BUILD)
+	rm -f $@
+	$(AR) rcs $@ $^
+
+$(BUILD)/%_test: %.c $(LIB) | $(BUILD)
+	$(CC) $(CFLAGS) $< $(LIB) -o $@
 
 # "make <name>_test" builds build/<name>_test
 $(NAMES): %_test: $(BUILD)/%_test
 	@:
 
-# rand() and srand() share the seed living in rand.s, so both objects
-# always link together
-$(BUILD)/rand_test $(BUILD)/srand_test: rand.s srand.s
-
 test: all
-	@pass=0; fail=0; xfail=0; \
+	@pass=0; fail=0; \
 	for t in $(NAMES); do \
 		exp=0; [ $$t = abort_test ] && exp=134; \
 		$(SPIKE) $(PK) $(BUILD)/$$t >/dev/null 2>&1; st=$$?; \
 		if [ $$st -eq $$exp ]; then \
-			pass=$$((pass + 1)); \
-			case " $(XFAIL) " in \
-			*" $$t "*) echo "xpass $$t (fixed: drop it from XFAIL)";; \
-			*) echo "ok    $$t";; \
-			esac; \
+			echo "ok    $$t"; pass=$$((pass + 1)); \
 		else \
-			case " $(XFAIL) " in \
-			*" $$t "*) xfail=$$((xfail + 1)); echo "xfail $$t (known broken)";; \
-			*) fail=$$((fail + 1)); echo "FAIL  $$t (exit $$st, want $$exp)";; \
-			esac; \
+			echo "FAIL  $$t (exit $$st, want $$exp)"; fail=$$((fail + 1)); \
 		fi; \
 	done; \
-	echo "---- $$pass passed, $$fail failed, $$xfail known broken"; \
+	echo "---- $$pass passed, $$fail failed"; \
 	[ $$fail -eq 0 ]
 
 clean:

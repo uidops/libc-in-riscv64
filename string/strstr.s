@@ -2,18 +2,17 @@
 .globl strstr
 
 .type strstr, @function
-
 strstr:
 	# a0 = haystack, a1 = needle
 	lbu t0, (a1)
 	bnez t0, .search
 	ret                 # needle is empty, return haystack (a0)
 .search:
-	add s1, x0, a0      # s1 is current scan pointer in haystack
+	add t1, x0, a0      # t1 is current scan pointer in haystack
 .outer_loop:
-	lbu t2, (s1)
+	lbu t2, (t1)
 	beqz t2, .not_found
-	add t3, x0, s1      # t3 scan pointer for haystack comparison
+	add t3, x0, t1      # t3 scan pointer for haystack comparison
 	add t4, x0, a1      # t4 scan pointer for needle comparison
 .inner_loop:
 	lbu t5, (t4)
@@ -24,10 +23,10 @@ strstr:
 	addi t4, t4, 1
 	j .inner_loop
 .next_char:
-	addi s1, s1, 1
+	addi t1, t1, 1
 	j .outer_loop
 .found:
-	add a0, x0, s1
+	add a0, x0, t1
 	ret
 .not_found:
 	li a0, 0
