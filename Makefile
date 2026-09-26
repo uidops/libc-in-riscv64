@@ -44,7 +44,7 @@ $(LIB): $(OBJS) | $(BUILD)
 	rm -f $@
 	$(AR) rcs $@ $^
 
-$(BUILD)/%_test: %.c $(LIB) | $(BUILD)
+$(BUILD)/%_test: %.c $(wildcard include/*.h) $(LIB) | $(BUILD)
 	$(CC) $(CFLAGS) $< $(LIB) -o $@
 
 # "make <name>_test" builds build/<name>_test
